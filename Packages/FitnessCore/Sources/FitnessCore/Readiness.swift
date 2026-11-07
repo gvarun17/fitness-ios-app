@@ -107,7 +107,7 @@ extension Coach {
         guard let usual = usualWeek, usual >= 30 else {
             return Signal(id: "load", label: "Training load", state: .none,
                           value: last7 > 0 ? "\(Int(last7.rounded())) min" : nil,
-                          note: "Needs a few weeks of workouts to know your usual")
+                          note: "Needs a few weeks of data")
         }
         let ratio = last7 / usual
         let state: SignalState = ratio <= 1.3 ? .good : ratio <= 1.5 ? .ok : .poor

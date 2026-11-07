@@ -55,7 +55,12 @@ You need a Mac with **Xcode** (free from the Mac App Store, iOS 17 SDK or newer)
    health data, so tap **Try it with demo data** on the first screen.
 5. **Your iPhone:** plug it in (or use the same Wi-Fi after pairing once), turn on
    **Settings › Privacy & Security › Developer Mode**, trust the Mac, pick the iPhone
-   in Xcode's device menu and press **Run**. Then tap **Connect Apple Health**.
+   in Xcode's device menu and press **Run**. Then tap **Connect Apple Health**:
+   - Turn on all the topics, and when asked how much data to share, choose
+     **All Recorded Data and Future Data**. With only the past 30 days, your
+     trends, bests, streaks and milestones start from scratch.
+   - Keep **Settings › General › Background App Refresh** on for Fitness Coach,
+     so new workouts and sleep reach the widgets without opening the app.
 
 For Garmin users: in the Garmin Connect app, turn on sharing to Apple Health
 (**More › Settings › Connected Apps › Apple Health**). As far as we know, Garmin

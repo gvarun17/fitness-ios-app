@@ -8,19 +8,22 @@ struct SettingsView: View {
     @State private var goalText = ""
     @State private var sleepNeed = 8.0
     @State private var message: String?
+    @FocusState private var editing: Bool
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("You") {
-                    TextField("Your name", text: $name).textContentType(.givenName)
+                    TextField("Your name", text: $name)
+                        .textContentType(.givenName).autocorrectionDisabled().focused($editing)
+                        .submitLabel(.done).onSubmit(save)
                 }
                 Section {
                     Picker("Count", selection: $goalType) {
                         ForEach(GoalType.allCases) { Text($0.label).tag($0) }
                     }
                     TextField("Suggested: \(Int(goalType.suggested)) \(goalType.unit)", text: $goalText)
-                        .keyboardType(.decimalPad)
+                        .keyboardType(.decimalPad).focused($editing)
                     Stepper("Sleep target: \(Fmt.hm(hours: sleepNeed))", value: $sleepNeed, in: 6...10, step: 0.25)
                 } header: { Text("Weekly goal") } footer: {
                     Text("Counted Monday to Sunday. Leave the number empty for the suggested target. A runs goal also sets how many runs your plan has each week.")
@@ -61,6 +64,14 @@ struct SettingsView: View {
     }
 
     func save() {
+        editing = false                 // close the keyboard so the last typing is committed first
+        Task { @MainActor in
+            await Task.yield()
+            store()
+        }
+    }
+
+    func store() {
         do {
             let value = try UserSettings.cleanGoal(goalType, goalText)
             model.save(settings: UserSettings(name: name.trimmingCharacters(in: .whitespaces), goalType: goalType,

@@ -22,6 +22,7 @@ struct TodayView: View {
                                            description: Text("Pull to refresh once Apple Health has some data."))
                 }
             }
+            .background(Color(.systemGroupedBackground))
             .refreshable { await model.refresh() }
             .navigationTitle(model.settings.name.isEmpty ? "Today" : "Hi, \(model.settings.name)")
         }

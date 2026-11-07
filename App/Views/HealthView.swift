@@ -30,6 +30,7 @@ struct HealthView: View {
                 }
                 .padding()
             }
+            .background(Color(.systemGroupedBackground))
             .refreshable { await model.refresh() }
             .navigationTitle("Health")
         }
@@ -50,13 +51,24 @@ struct SleepCard: View {
                 }
                 let shown = s.nights.filter { $0.bedtime != nil && $0.wake != nil }
                 if !shown.isEmpty {
+                    // whole hours from just before the earliest bedtime to just after the latest wake-up
+                    let lo = (shown.map { $0.bedtime! }.min()! / 60) * 60
+                    let hi = ((shown.map { $0.wake! }.max()! + 59) / 60) * 60
+                    let labels = shown.map { $0.day.text(.dayNumber) }
+                    // plotted as negative minutes so the evening sits at the top
                     Chart(shown, id: \.day) { n in
-                        BarMark(x: .value("Night", n.day.text(.short)), yStart: .value("Asleep", n.bedtime!), yEnd: .value("Awake", n.wake!), width: 10)
+                        BarMark(x: .value("Night", n.day.text(.dayNumber)), yStart: .value("Asleep", -n.bedtime!), yEnd: .value("Awake", -n.wake!), width: 10)
                             .foregroundStyle(Color.indigo).cornerRadius(4)
                     }
-                    .chartYScale(domain: .automatic(includesZero: false, reversed: true))
-                    .chartYAxis { AxisMarks { v in AxisGridLine(); AxisValueLabel { if let m = v.as(Int.self) { Text(Fmt.timeOfNight(m)) } } } }
-                    .chartXAxis { AxisMarks(values: .automatic(desiredCount: 4)) }
+                    .chartYScale(domain: [-hi, -lo])
+                    .chartYAxis {
+                        AxisMarks(values: Array(stride(from: lo, through: hi, by: hi - lo > 600 ? 180 : 120)).map { -$0 }) { v in
+                            AxisGridLine(); AxisValueLabel { if let m = v.as(Int.self) { Text(Fmt.timeOfNight(-m)) } }
+                        }
+                    }
+                    .chartXAxis {
+                        AxisMarks(values: labels.enumerated().filter { $0.offset % 2 == (labels.count - 1) % 2 }.map(\.element))
+                    }
                     .frame(height: 170)
                     .accessibilityLabel("When you slept, each night")
                 }

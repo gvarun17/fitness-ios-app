@@ -235,6 +235,8 @@ struct PlanView: View {
                     }
                     .font(.caption)
                 }
+                Text("Done: \(p.week.doneRuns) run\(p.week.doneRuns == 1 ? "" : "s") · \(Fmt.km(p.week.doneKm)) km this week")
+                    .font(.caption2).foregroundStyle(.secondary)
                 if family == .systemLarge {
                     Divider()
                     Text("Coming up").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
@@ -243,7 +245,16 @@ struct PlanView: View {
                             .font(.caption2)
                     }
                     Divider()
-                    Label(s.milestones.tip, systemImage: "flag.checkered").font(.caption2).lineLimit(3)
+                    let m = s.milestones
+                    HStack(spacing: 4) {
+                        ForEach(m.steps) { st in
+                            Capsule().fill(st.reached != nil ? Theme.accent : Theme.accent.opacity(0.2)).frame(height: 6)
+                        }
+                    }
+                    .accessibilityLabel("\(m.reachedCount) of \(m.steps.count) milestones reached")
+                    Text(m.nextStep.map { "Next: \($0.label)" + (m.toGoKm.map { ", \(Fmt.km($0)) km to go" } ?? "") } ?? "Ladder complete")
+                        .font(.caption.weight(.semibold))
+                    Label(m.tip, systemImage: "flag.checkered").font(.caption2).foregroundStyle(.secondary).lineLimit(3)
                 }
                 Spacer(minLength: 0)
             }
@@ -329,8 +340,12 @@ struct OverviewView: View {
                                 let info = MetricInfo.make(k, s)
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(info.title).font(.caption2).foregroundStyle(.secondary)
-                                    Text(info.value).font(.subheadline.bold()).minimumScaleFactor(0.6).lineLimit(1)
-                                    if family == .systemLarge, let v = info.values { MiniBars(values: v, color: info.color).frame(height: 18) }
+                                    HStack(alignment: .firstTextBaseline, spacing: 2) {
+                                        Text(info.value).font(.subheadline.bold())
+                                        Text(info.unit).font(.caption2).foregroundStyle(.secondary)
+                                    }
+                                    .minimumScaleFactor(0.6).lineLimit(1)
+                                    if let v = info.values { MiniBars(values: v, color: info.color).frame(height: family == .systemLarge ? 18 : 14) }
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
@@ -344,6 +359,14 @@ struct OverviewView: View {
                           systemImage: "flag.checkered").font(.caption)
                     if let w = s.lastWorkout {
                         Label("\(w.name) · \(w.day.text(.short))\(w.km > 0 ? " · \(Fmt.km(w.km)) km" : "")", systemImage: w.sport.symbol).font(.caption)
+                    }
+                    Divider()
+                    Text("This week's runs · road to \(s.plan.target)").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                    HStack(spacing: 8) {
+                        ForEach(s.plan.sessions) { x in
+                            Label("\(x.day) \(Fmt.km(x.km))", systemImage: x.done ? "checkmark.circle.fill" : "circle")
+                                .font(.caption2).foregroundStyle(x.done ? Theme.good : .secondary)
+                        }
                     }
                     Spacer(minLength: 0)
                 }

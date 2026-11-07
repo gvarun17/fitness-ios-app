@@ -120,7 +120,7 @@ extension Snapshot {
 }
 
 extension Day {
-    enum Style { case long, short, weekday }
+    enum Style { case long, short, weekday, dayNumber }
 
     /// "Friday 6 November", "6 Nov" or "Fri", in the user's language. A Day's
     /// date is midnight UTC, so it's formatted in UTC.
@@ -130,6 +130,7 @@ extension Day {
         case .long: f = f.weekday(.wide).day().month(.wide)
         case .short: f = f.day().month(.abbreviated)
         case .weekday: f = f.weekday(.abbreviated)
+        case .dayNumber: f = f.day()
         }
         return date.formatted(f)
     }

@@ -19,6 +19,7 @@ struct TrainingView: View {
                     .padding()
                 }
             }
+            .background(Color(.systemGroupedBackground))
             .refreshable { await model.refresh() }
             .navigationTitle("Training")
         }
@@ -175,7 +176,8 @@ struct BestsCard: View {
                             Text(b.label).font(.subheadline)
                             if b.isNew { Text("NEW").font(.caption2.bold()).padding(.horizontal, 5).background(Theme.warn, in: Capsule()).foregroundStyle(.black) }
                         }
-                        Text(b.day.text(.short) + (b.name.isEmpty ? "" : " · \(b.name)")).font(.caption).foregroundStyle(.secondary)
+                        Text((b.note == "week" ? "Week of " : "") + b.day.text(.short) + (b.name.isEmpty ? "" : " · \(b.name)"))
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
                     Text(b.text).font(.subheadline.bold())

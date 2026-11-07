@@ -19,7 +19,8 @@ public enum DemoData {
         var runKm = 0.8
         for back in stride(from: count - 1, through: 0, by: -1) {
             let d = today.adding(-back)
-            let base = d.date.addingTimeInterval(7 * 3600)
+            // 07:00 local time on that day (a Day's date is midnight UTC)
+            let base = d.date.addingTimeInterval(7 * 3600 - Double(TimeZone.current.secondsFromGMT(for: d.date)))
             var exercise = rnd.between(10, 30)
             // Walks most days, a run every 2-3 days from 60 days ago, rides and gym sometimes
             if back % 7 != 3 {
