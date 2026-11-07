@@ -39,16 +39,11 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: com.gvarun17.fitness
             CFBundleURLSchemes: [fitnesscoach]
-    entitlements:
-      path: App/Fitness.entitlements
-      properties:
-        com.apple.developer.healthkit: true
-        com.apple.developer.healthkit.access: []
-        com.apple.developer.healthkit.background-delivery: true
-        com.apple.security.application-groups: [group.com.gvarun17.fitness]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.gvarun17.fitness
+        # FC_SIGNING=-free uses the copy without the App Group (free Apple accounts; see README)
+        CODE_SIGN_ENTITLEMENTS: App/Fitness$(FC_SIGNING).entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         TARGETED_DEVICE_FAMILY: "1"
@@ -68,13 +63,11 @@ targets:
         CFBundleDisplayName: Fitness Coach
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
-    entitlements:
-      path: Widgets/FitnessWidgets.entitlements
-      properties:
-        com.apple.security.application-groups: [group.com.gvarun17.fitness]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.gvarun17.fitness.widgets
+        # FC_SIGNING=-free uses the copy without the App Group (free Apple accounts; see README)
+        CODE_SIGN_ENTITLEMENTS: Widgets/FitnessWidgets$(FC_SIGNING).entitlements
         TARGETED_DEVICE_FAMILY: "1"
         SKIP_INSTALL: YES
 schemes:

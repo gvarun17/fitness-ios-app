@@ -64,10 +64,12 @@
 		70FD6970DBF1321F583BF6F8 /* TrainingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingView.swift; sourceTree = "<group>"; };
 		7AA1B4908CCD284C9A622022 /* Fitness.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Fitness.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C6E1723FCDDCC43B1795A91 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		A71DD4077F0CD7623AECD72A /* FitnessWidgets-free.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "FitnessWidgets-free.entitlements"; sourceTree = "<group>"; };
 		AC189D23DD25287EB24AF501 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		B10B70F71226817A2BEFACA6 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		B850297C0FE14B670C99012E /* Provider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Provider.swift; sourceTree = "<group>"; };
 		BA10FA5DF0F6373BD9B93D48 /* FitnessApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitnessApp.swift; sourceTree = "<group>"; };
+		BD5A10571320662247A76C9E /* Fitness-free.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Fitness-free.entitlements"; sourceTree = "<group>"; };
 		C7F3A2DBE6017B58D057E264 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DAE48CC414920CC2AE30D54D /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		E5148A1B14D82499E6A6E897 /* Fitness.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Fitness.entitlements; sourceTree = "<group>"; };
@@ -109,6 +111,7 @@
 			children = (
 				0949D280FAC1453DE3D05453 /* AppModel.swift */,
 				04E124767D116ACC983D5928 /* Assets.xcassets */,
+				BD5A10571320662247A76C9E /* Fitness-free.entitlements */,
 				E5148A1B14D82499E6A6E897 /* Fitness.entitlements */,
 				BA10FA5DF0F6373BD9B93D48 /* FitnessApp.swift */,
 				6FA20E672F7AE61DA62D005D /* HealthKitService.swift */,
@@ -141,6 +144,7 @@
 		6B1A2E1551B511780A22B552 /* Widgets */ = {
 			isa = PBXGroup;
 			children = (
+				A71DD4077F0CD7623AECD72A /* FitnessWidgets-free.entitlements */,
 				2C9F294AD84A5A0CCC845B71 /* FitnessWidgets.entitlements */,
 				162111CE65CFB16296993EB5 /* FitnessWidgets.swift */,
 				C7F3A2DBE6017B58D057E264 /* Info.plist */,
@@ -314,7 +318,7 @@
 		2A17B95B02176E5797A87AD9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = Widgets/FitnessWidgets.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "Widgets/FitnessWidgets$(FC_SIGNING).entitlements";
 				INFOPLIST_FILE = Widgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -400,7 +404,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = App/Fitness.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "App/Fitness$(FC_SIGNING).entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -416,7 +420,7 @@
 		A6F1515CD0237DF14357A084 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = Widgets/FitnessWidgets.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "Widgets/FitnessWidgets$(FC_SIGNING).entitlements";
 				INFOPLIST_FILE = Widgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -495,7 +499,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = App/Fitness.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "App/Fitness$(FC_SIGNING).entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

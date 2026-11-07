@@ -48,9 +48,20 @@ You need a Mac with **Xcode** (free from the Mac App Store, iOS 17 SDK or newer)
      (`group.com.gvarun17.fitness`) must be unique to your account. If Xcode
      complains, change them in `project.yml` and `SnapshotStore.appGroup`, then run
      `xcodegen`.
-   - If Xcode says a capability (HealthKit, App Groups, background delivery) isn't
-     available for a **Personal Team**, you need the paid Apple Developer Program
-     ($99/year), which you'll need for TestFlight and the App Store anyway.
+   - **Free Apple account (Personal Team):** Apple Health and background updates
+     work, but Xcode may not register the App Group the widgets share with the app.
+     Build without it (the app works fully; widgets show "Open Fitness Coach to set up"):
+     ```bash
+     xcodebuild -project Fitness.xcodeproj -scheme Fitness -destination 'id=<your iPhone UDID>' \
+       -derivedDataPath build -allowProvisioningUpdates DEVELOPMENT_TEAM=<your team ID> FC_SIGNING=-free build
+     xcrun devicectl device install app --device <your iPhone UDID> build/Build/Products/Debug-iphoneos/Fitness.app
+     ```
+     `xcrun devicectl list devices` shows the UDID. For widgets on a real phone, tick the
+     App Group under Signing & Capabilities in Xcode, or use the paid Apple Developer
+     Program ($99/year), which TestFlight and the App Store need anyway.
+   - The first time, the iPhone won't open the app until you trust yourself:
+     **Settings › General › VPN & Device Management** › your Apple ID › **Trust**.
+     Apps from a free account stop opening after 7 days; just build and install again.
 4. **Simulator:** pick an iPhone simulator and press **Run** (⌘R). The Simulator has no
    health data, so tap **Try it with demo data** on the first screen.
 5. **Your iPhone:** plug it in (or use the same Wi-Fi after pairing once), turn on

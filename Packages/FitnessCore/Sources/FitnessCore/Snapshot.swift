@@ -82,12 +82,16 @@ public struct SnapshotStore: Sendable {
 
     public init(folder: URL) { self.folder = folder }
 
-    /// The shared App Group folder, or a private one if the group isn't set up
-    /// (for example in tests).
+    /// The shared App Group folder. Without the App Group (a build signed with a
+    /// free Apple account, or tests) the app keeps its own data in Application
+    /// Support instead: everything works except the widgets, which can't read it.
     public static var shared: SnapshotStore {
-        let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup)
-            ?? FileManager.default.temporaryDirectory.appendingPathComponent("FitnessShared", isDirectory: true)
-        return SnapshotStore(folder: url)
+        if let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup) {
+            return SnapshotStore(folder: url)
+        }
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
+        return SnapshotStore(folder: support.appendingPathComponent("FitnessShared", isDirectory: true))
     }
 
     var snapshotURL: URL { folder.appendingPathComponent("snapshot.json") }
