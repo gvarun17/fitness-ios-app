@@ -6,14 +6,20 @@ Garmin, Coros, Polar, Oura or any app that syncs there.
 
 **No servers. Read-only. Your data never leaves the iPhone.**
 
+Garmin users can also connect the **Garmin Personal API** directly (Settings ›
+Garmin) for everything the web dashboard (`my-personal-dashboard`) shows: Body
+Battery, stress, sleep score, HRV status, training load, heart rate zones, graphs
+through the day and second-by-second graphs for each workout. The app calls Garmin
+straight from the phone; the key lives in the iPhone's Keychain.
+
 ## What it does
 
 | Screen | What you see |
 |---|---|
-| **Today** | Today's call (train, take it easy or rest) from last night's HRV, sleep, resting heart rate and your training load; steps, exercise, calories, resting HR, HRV and sleep with 7-day bars; new personal bests; today's workouts (tap one for details). |
-| **Training** | Weekly goal ring and streak; a training plan toward your next milestone (easy runs plus a long run growing ~10% a week, run-walk intervals while runs are short, an easier week every 4th); the milestone ladder from first run to Ironman; running form charts (pace, cadence, stride, metres per heartbeat); personal bests and firsts. |
-| **Health** | Sleep insights for the last 2 weeks (average vs your target, sleep debt, bedtime consistency, a chart of when you slept, tips) and trend charts for steps, resting HR, HRV, sleep, exercise and active calories over 1M / 3M / 6M / 1Y. |
-| **Settings** | Your name, weekly goal (exercise minutes, distance, running distance or number of runs), sleep target, Apple Health connection, demo data. |
+| **Today** | ‹ Today › to step back through the last 90 days. Today's call (train, take it easy or rest) from HRV (Garmin's HRV status when connected), sleep (Garmin's sleep score), resting heart rate, Body Battery and training load. The day's steps, exercise, calories, resting HR, heart rate range, Body Battery, stress, sleep, HRV, breathing and floors; heart rate and Body Battery through the day (Garmin, last 7 days); new personal bests; the day's workouts. Tap a workout for its stats, heart rate zones, run/walk split and second-by-second graphs of heart rate, pace, cadence, power and elevation. |
+| **Training** | Weekly goal ring and streak; training plan; milestone ladder from first run to Ironman; six tiles comparing this week with recent weeks (distance, steps, resting HR, HRV, sleep, training load); distance / time / sessions by sport for 12 weeks with a this-week-vs-usual table; exercise minutes per week against 150; training load per week by sport; time in heart rate zones over 4 weeks; running form charts; personal bests and firsts; your five biggest days. |
+| **Health** | Sleep insights for the last 2 weeks (vs your need, sleep debt, bedtime consistency, overnight stress, when you slept, tips); stress, Body Battery and calorie tiles; steps heatmap for 6 months; workouts other than running (hours per week and recent sessions); charts for steps, resting HR, HRV, sleep and sleep stages, stress, Body Battery high/low, exercise and active calories over 1M / 3M / 6M / 1Y. |
+| **Settings** | Your name, weekly goal, sleep target, Apple Health, Garmin (connect, sync now, disconnect), demo data. |
 
 ### Widgets
 
@@ -73,7 +79,25 @@ You need a Mac with **Xcode** (free from the Mac App Store, iOS 17 SDK or newer)
    - Keep **Settings › General › Background App Refresh** on for Fitness Coach,
      so new workouts and sleep reach the widgets without opening the app.
 
-For Garmin users: in the Garmin Connect app, turn on sharing to Apple Health
+### Connecting Garmin (optional)
+
+1. In Garmin Connect on the web, open **Personal API Key**
+   (https://connect.garmin.com/app/settings/personalApiToken), click **Create Key**,
+   choose 1 year and copy the key (Garmin shows it once).
+2. In the app: **Settings › Garmin**, paste it and tap **Connect Garmin**. The key is
+   checked with Garmin, saved in the Keychain and never shown again.
+3. The first sync downloads a year of history (a minute or two). After that the app
+   syncs when you open it (at most every 15 minutes), when you pull to refresh, and
+   in the background every few hours when iOS allows.
+
+Garmin first, Apple Health filling the gaps: where both have a number, Garmin's is
+used; workouts from other apps (an Apple Watch, say) are kept unless Garmin has the
+same one. **Disconnect Garmin** deletes the key and everything downloaded from Garmin.
+
+As before, the Personal API is meant for your own data: fine for your own phone,
+but check Garmin's terms before offering it to other people.
+
+For Garmin users without the API key: in the Garmin Connect app, turn on sharing to Apple Health
 (**More › Settings › Connected Apps › Apple Health**). As far as we know, Garmin
 shares workouts, steps, heart rate, calories and sleep, but not Body Battery,
 stress or Garmin's own HRV status; the app works out its own versions from what's
@@ -85,9 +109,9 @@ there.
 fitness-ios/
 ├── project.yml              Xcode project definition (XcodeGen); Fitness.xcodeproj is generated from it
 ├── Packages/FitnessCore/    Swift package: data models + all coaching logic, no Apple Health or UI code
-│   ├── Sources/FitnessCore/ Readiness, Goals, Milestones, Plan, Bests, Sleep, Snapshot, DemoData
-│   └── Tests/               34 tests (Swift Testing)
-├── App/                     SwiftUI app: Apple Health reading, screens, settings
+│   ├── Sources/FitnessCore/ Readiness, Goals, Milestones, Plan, Bests, Sleep, Insights, Garmin, Snapshot, DemoData
+│   └── Tests/               47 tests (Swift Testing), including a fake Garmin that answers with made-up data
+├── App/                     SwiftUI app: Apple Health reading, Garmin sync (GarminService: Keychain + cache), screens
 ├── Widgets/                 WidgetKit extension: 8 widgets
 ├── Shared/                  Colours and small views used by both the app and the widgets
 └── scripts/test-core.sh     Runs the FitnessCore tests on the Mac

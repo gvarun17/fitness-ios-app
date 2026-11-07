@@ -9,6 +9,9 @@ public struct TodayStats: Codable, Sendable, Equatable {
     public var hrv: Double?
     public var sleepHours: Double?
     public var workouts: Int
+    // Garmin only
+    public var bodyBattery: Double?
+    public var stress: Double?
 }
 
 /// The last 7 days, oldest first, for small trend charts. nil = no data that day.
@@ -20,6 +23,8 @@ public struct Trends: Codable, Sendable, Equatable {
     public var restingHR: [Double?]
     public var hrv: [Double?]
     public var sleepHours: [Double?]
+    public var bodyBattery: [Double?]
+    public var stress: [Double?]
 }
 
 /// Everything the app's Today screen and the widgets show, worked out in one go.
@@ -56,14 +61,16 @@ extension Coach {
             readiness: readiness(data, settings: settings, today: today),
             stats: TodayStats(steps: d?.steps, exerciseMinutes: d?.exerciseMinutes, activeKcal: d?.activeKcal,
                               restingHR: d?.restingHR, hrv: d?.hrv, sleepHours: data.night(today)?.asleepHours,
-                              workouts: todays.count),
+                              workouts: todays.count, bodyBattery: d?.bbLatest ?? d?.bbHigh, stress: d?.stressAvg),
             trends: Trends(days: week,
                            steps: week.map { data.day($0)?.steps.map(Double.init) },
                            exerciseMinutes: week.map { data.day($0)?.exerciseMinutes },
                            activeKcal: week.map { data.day($0)?.activeKcal },
                            restingHR: week.map { data.day($0)?.restingHR },
                            hrv: week.map { data.day($0)?.hrv },
-                           sleepHours: week.map { data.night($0)?.asleepHours }),
+                           sleepHours: week.map { data.night($0)?.asleepHours },
+                           bodyBattery: week.map { data.day($0)?.bbHigh },
+                           stress: week.map { data.day($0)?.stressAvg }),
             goal: weeklyGoal(data, settings: settings, today: today),
             milestones: ladder,
             plan: trainingPlan(data, ladder: ladder, settings: settings, today: today),

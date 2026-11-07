@@ -16,7 +16,12 @@ struct FitnessApp: App {
                 }
                 .onChange(of: phase) { _, now in
                     if now == .active { Task { await model.refresh() } }
+                    if now == .background { model.scheduleBackgroundRefresh() }
                 }
+        }
+        // iOS wakes the app now and then to sync Garmin in the background
+        .backgroundTask(.appRefresh(AppModel.backgroundTask)) {
+            await model.handleBackgroundRefresh()
         }
     }
 }
@@ -53,7 +58,7 @@ struct OnboardingView: View {
             Spacer()
             Image(systemName: "figure.run.circle.fill").font(.system(size: 64)).foregroundStyle(Theme.accent)
             Text("Your coach, from first run to finish line").font(.largeTitle.bold())
-            Text("Fitness Coach reads your workouts, steps, heart rate, HRV and sleep from Apple Health, from any watch that syncs there, and tells you how ready you are, what to run this week and how you're progressing.")
+            Text("Fitness Coach reads your workouts, steps, heart rate, HRV and sleep from Apple Health, from any watch that syncs there, and tells you how ready you are, what to run this week and how you're progressing. Garmin users can also connect Garmin directly in Settings for Body Battery, stress and more.")
                 .foregroundStyle(.secondary)
             Label("Read-only, and your data never leaves this iPhone.", systemImage: "lock.shield")
                 .font(.subheadline)

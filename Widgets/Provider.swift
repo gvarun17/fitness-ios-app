@@ -46,12 +46,12 @@ struct MetricProvider: AppIntentTimelineProvider {
 // MARK: - Configurable metric
 
 enum MetricKind: String, AppEnum, CaseIterable {
-    case steps, exercise, activeEnergy, restingHR, hrv, sleep, weeklyGoal, streak, nextMilestone, sleepDebt, longestRun, readiness
+    case steps, exercise, activeEnergy, restingHR, hrv, sleep, bodyBattery, stress, weeklyGoal, streak, nextMilestone, sleepDebt, longestRun, readiness
 
     static var typeDisplayRepresentation: TypeDisplayRepresentation { "Metric" }
     static var caseDisplayRepresentations: [MetricKind: DisplayRepresentation] {
         [.steps: "Steps", .exercise: "Exercise minutes", .activeEnergy: "Active calories", .restingHR: "Resting heart rate",
-         .hrv: "HRV", .sleep: "Sleep last night", .weeklyGoal: "Weekly goal", .streak: "Goal streak",
+         .hrv: "HRV", .sleep: "Sleep last night", .bodyBattery: "Body Battery (Garmin)", .stress: "Stress (Garmin)", .weeklyGoal: "Weekly goal", .streak: "Goal streak",
          .nextMilestone: "Next milestone", .sleepDebt: "Sleep debt", .longestRun: "Longest run", .readiness: "Today's call"]
     }
 }
@@ -100,6 +100,12 @@ struct MetricInfo {
         case .sleep:
             return MetricInfo(title: "Sleep", value: t.sleepHours.map { Fmt.hm(hours: $0) } ?? "–", symbol: "bed.double", color: .indigo,
                               values: tr.sleepHours, progress: t.sleepHours.map { min($0 / s.sleep.need, 1) }, note: "last night")
+        case .bodyBattery:
+            return MetricInfo(title: "Body Battery", value: n(t.bodyBattery), symbol: "battery.75percent", color: Theme.accent,
+                              values: tr.bodyBattery, progress: t.bodyBattery.map { $0 / 100 }, note: t.bodyBattery == nil ? "connect Garmin" : "now")
+        case .stress:
+            return MetricInfo(title: "Stress", value: n(t.stress), symbol: "gauge.with.dots.needle.33percent", color: Theme.warn,
+                              values: tr.stress, note: t.stress == nil ? "connect Garmin" : "today's average")
         case .weeklyGoal:
             let g = s.goal
             return MetricInfo(title: g.type.label, value: WeeklyGoal.text(g.value, g.type), unit: "/ \(WeeklyGoal.text(g.target, g.type))",

@@ -10,6 +10,8 @@ public struct SleepInsights: Codable, Sendable, Equatable {
     public var bedtimeSpread: Int?
     public var wake: Int?
     public var wakeSpread: Int?
+    public var stress: Int?
+    public var score: Int?
     public var nights: [SleepNight]
     public var tips: [String]
 }
@@ -18,7 +20,8 @@ extension Coach {
     public static func sleepInsights(_ data: HealthData, settings: UserSettings, today: Day, nights count: Int = 14) -> SleepInsights {
         let start = today.adding(-(count - 1))
         let rows = data.nights.filter { $0.day >= start && $0.day <= today && $0.asleepHours > 0 }
-        let need = settings.sleepNeedHours
+        // Garmin's own sleep need when it has one, your target otherwise
+        let need = rows.last(where: { $0.needHours != nil })?.needHours ?? settings.sleepNeedHours
         var out = SleepInsights(need: need, nightsTracked: rows.count, nights: rows, tips: [])
         guard !rows.isEmpty else {
             out.tips = ["No nights tracked in the last two weeks. Wear your watch to bed to get sleep insights."]
@@ -60,6 +63,14 @@ extension Coach {
                 out.tips.append("You slept \(Fmt.hm(hours: abs(e - l))) longer on nights you went to bed \(better) \(at).")
             }
         }
+        let stress = rows.compactMap(\.stressAvg)
+        if let st = mean(stress) {
+            out.stress = Int(st.rounded())
+            out.tips.append(st > 25
+                ? "Overnight stress averaged \(Int(st.rounded())) (under 25 is restful). Late meals, alcohol, screens or hard evening workouts can keep it up."
+                : "Overnight stress averaged \(Int(st.rounded())): your body is resting well at night.")
+        }
+        if let sc = mean(rows.compactMap(\.score)) { out.score = Int(sc.rounded()) }
         let wakes = rows.compactMap(\.wake).map(Double.init)
         if wakes.count >= 3 {
             let (m, sd) = spread(wakes)

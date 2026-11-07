@@ -9,6 +9,9 @@ struct SettingsView: View {
     @State private var sleepNeed = 8.0
     @State private var message: String?
     @FocusState private var editing: Bool
+    @State private var garminKey = ""
+    @State private var garminMessage: String?
+    @State private var garminBusy = false
 
     var body: some View {
         NavigationStack {
@@ -41,6 +44,38 @@ struct SettingsView: View {
                     Toggle("Show demo data", isOn: Binding(get: { model.demoMode }, set: { on in Task { await model.useDemo(on) } }))
                 } header: { Text("Data") } footer: {
                     Text("Reads workouts, steps, heart rate, HRV and sleep from Apple Health: from Apple Watch, Garmin, Coros, Polar, Oura or any app that syncs there. Read-only, and nothing leaves this iPhone. To change what's shared: Settings › Health › Data Access & Devices › Fitness Coach.")
+                }
+                Section {
+                    if model.garminConnected {
+                        Label("Connected to Garmin", systemImage: "checkmark.circle.fill").foregroundStyle(Theme.good)
+                        if let s = model.garminSynced {
+                            LabeledContent("Last synced", value: s.formatted(date: .abbreviated, time: .shortened))
+                        }
+                        if let st = model.garminStatus {
+                            Text(st).font(.footnote).foregroundStyle(st.hasPrefix("Garmin sync failed") ? Theme.bad : .secondary)
+                        }
+                        Button("Sync now") { Task { await model.refresh(forceGarmin: true) } }.disabled(model.loading)
+                        Button("Disconnect Garmin", role: .destructive) { Task { await model.disconnectGarmin() } }
+                    } else {
+                        SecureField("Paste your Personal API key", text: $garminKey)
+                            .textInputAutocapitalization(.never).autocorrectionDisabled().focused($editing)
+                        Button(garminBusy ? "Checking your key with Garmin…" : "Connect Garmin") {
+                            editing = false
+                            garminBusy = true
+                            Task {
+                                garminMessage = await model.connectGarmin(key: garminKey)
+                                garminKey = ""             // never kept on screen
+                                garminBusy = false
+                            }
+                        }
+                        .disabled(garminBusy || garminKey.isEmpty)
+                        Link("Get a key: Garmin Connect › Personal API Key",
+                             destination: URL(string: "https://connect.garmin.com/app/settings/personalApiToken")!)
+                            .font(.footnote)
+                    }
+                    if let m = garminMessage { Text(m).font(.footnote).foregroundStyle(Theme.bad) }
+                } header: { Text("Garmin") } footer: {
+                    Text("Optional, for Garmin watches. Adds Body Battery, stress, sleep score, HRV status, training load, heart rate zones, and graphs through the day and for each workout. Read-only: the key is checked with Garmin, kept in this iPhone's Keychain and never shown again. The first sync downloads a year of history and takes a minute or two.")
                 }
                 Section("Widgets") {
                     Text("Touch and hold your Home Screen or Lock Screen, tap Edit › Add Widget, and search for Fitness Coach. The Metric widget can show any single number: tap it while editing to choose which.")

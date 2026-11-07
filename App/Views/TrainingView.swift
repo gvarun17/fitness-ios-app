@@ -13,14 +13,22 @@ struct TrainingView: View {
                         GoalCard(g: s.goal)
                         PlanCard(p: s.plan, rest: s.readiness.level == .rest)
                         MilestonesCard(m: s.milestones)
-                        FormCard(runs: model.data.workouts.filter { $0.sport == .run })
+                        let data = model.data, today = model.today
+                        let weeks = Coach.sportWeeks(data, today: today)
+                        TilesGrid(title: "This week vs recent weeks", tiles: Coach.trainingTiles(data, today: today))
+                        SportWeeksCard(weeks: weeks, today: today)
+                        ExerciseWeeksCard(weeks: Coach.exerciseWeeks(data, today: today), goal: 150)
+                        LoadWeeksCard(weeks: weeks)
+                        ZonesCard(zones: Coach.zones(data, today: today))
+                        FormCard(runs: data.workouts.filter { $0.sport == .run })
                         BestsCard(r: s.records)
+                        BiggestDaysCard(workouts: Coach.biggest(data))
                     }
                     .padding()
                 }
             }
             .background(Color(.systemGroupedBackground))
-            .refreshable { await model.refresh() }
+            .refreshable { await model.refresh(forceGarmin: true) }
             .navigationTitle("Training")
         }
     }

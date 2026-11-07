@@ -59,11 +59,17 @@ public struct Readiness: Codable, Sendable, Equatable {
 extension Coach {
     /// HRV last night against your own 7-day average (Apple Health HRV varies a lot
     /// between people and devices, so only your own trend means anything).
-    static func hrvSignal(today: Double?, previous: [Double]) -> Signal {
+    static func hrvSignal(today: Double?, previous: [Double], status: String? = nil) -> Signal {
         guard let v = today else {
             return Signal(id: "hrv", label: "HRV", state: .none, value: nil, note: "Not measured last night")
         }
         let value = "\(Int(v.rounded())) ms"
+        switch (status ?? "").uppercased() {
+        case "BALANCED": return Signal(id: "hrv", label: "HRV", state: .good, value: value, note: "In your normal range (Garmin)")
+        case "UNBALANCED": return Signal(id: "hrv", label: "HRV", state: .ok, value: value, note: "Outside your normal range (Garmin)")
+        case "LOW", "POOR": return Signal(id: "hrv", label: "HRV", state: .poor, value: value, note: "Below your normal range (Garmin)")
+        default: break
+        }
         guard previous.count >= 3, let avg = mean(previous) else {
             return Signal(id: "hrv", label: "HRV", state: .none, value: value, note: "Still learning your normal range")
         }
@@ -79,6 +85,10 @@ extension Coach {
             return Signal(id: "sleep", label: "Sleep", state: .none, value: nil, note: "Not tracked last night")
         }
         let h = n.asleepHours
+        if let sc = n.score {
+            let state: SignalState = sc >= 80 ? .good : sc >= 60 ? .ok : .poor
+            return Signal(id: "sleep", label: "Sleep", state: state, value: Fmt.hm(hours: h), note: "Sleep score \(Int(sc))")
+        }
         let state: SignalState = h >= need - 0.5 ? .good : h >= need - 1.5 ? .ok : .poor
         return Signal(id: "sleep", label: "Sleep", state: state, value: Fmt.hm(hours: h),
                       note: "Your target is \(Fmt.hm(hours: need))")
@@ -121,6 +131,14 @@ extension Coach {
         return Signal(id: "load", label: "Training load", state: state, value: "\(Int(last7.rounded())) min", note: note)
     }
 
+    /// Garmin's Body Battery at its highest today (usually just after waking)
+    static func bodyBatterySignal(_ peak: Double?) -> Signal? {
+        guard let p = peak else { return nil }
+        let state: SignalState = p >= 75 ? .good : p >= 50 ? .ok : .poor
+        let note = ["good": "Well charged", "ok": "Partly charged", "poor": "Low charge"][state.rawValue]! + " this morning"
+        return Signal(id: "bb", label: "Body Battery", state: state, value: "\(Int(p))", note: note)
+    }
+
     public static func readiness(_ data: HealthData, settings: UserSettings, today: Day) -> Readiness {
         let summary = data.day(today)
         let before = (1...7).compactMap { data.day(today.adding(-$0))?.hrv }
@@ -129,12 +147,13 @@ extension Coach {
             (from...to).compactMap { data.day(today.adding(-$0))?.exerciseMinutes }.reduce(0, +)
         }
         let hasHistory = data.days.contains { $0.day <= today.adding(-14) }
-        let signals = [
-            hrvSignal(today: summary?.hrv, previous: before),
+        var signals = [
+            hrvSignal(today: summary?.hrv, previous: before, status: summary?.hrvStatus),
             sleepSignal(data.night(today), need: settings.sleepNeedHours),
             restingHRSignal(today: summary?.restingHR, history: rhrHistory),
             loadSignal(last7: ex(0, 6), usualWeek: hasHistory ? ex(7, 34) / 4 : nil),
         ]
+        if let bb = bodyBatterySignal(summary?.bbHigh) { signals.insert(bb, at: 3) }
         let rated = signals.map(\.state).filter { $0 != .none }
         guard rated.count >= 2 else {
             return Readiness(level: nil, title: "Not enough data yet today",

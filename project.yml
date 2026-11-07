@@ -33,6 +33,8 @@ targets:
         UILaunchScreen: {}
         UIApplicationSupportsIndirectInputEvents: true
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIBackgroundModes: [fetch]
+        BGTaskSchedulerPermittedIdentifiers: [com.gvarun17.fitness.refresh]
         NSHealthShareUsageDescription: >-
           Fitness Coach reads your workouts, steps, heart rate, HRV and sleep from Apple Health
           to show your progress and coach you. Your data stays on this iPhone.

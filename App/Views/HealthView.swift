@@ -13,6 +13,10 @@ struct HealthView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     if let s = model.snapshot { SleepCard(s: s.sleep) }
+                    let ht = Coach.healthTiles(model.data, today: model.today)
+                    if !ht.isEmpty { TilesGrid(title: "Last 7 days vs your usual", tiles: ht) }
+                    StepsHeatmap(days: model.data.days, today: model.today)
+                    OtherWorkoutsCard(weeks: Coach.sportWeeks(model.data, today: model.today), workouts: model.data.workouts)
                     Picker("Range", selection: $range) {
                         Text("1M").tag(30); Text("3M").tag(90); Text("6M").tag(180); Text("1Y").tag(365)
                     }
@@ -25,13 +29,19 @@ struct HealthView: View {
                     TrendCard(title: "HRV", unit: "ms", points: days.compactMap { d in d.hrv.map { (d.day, $0) } }, color: Theme.accent,
                               note: "Compare with your own trend, not other people's.")
                     TrendCard(title: "Sleep", unit: "h", points: nights.map { ($0.day, $0.asleepHours) }, bars: true, color: .indigo)
+                    SleepStagesCard(nights: nights)
+                    if days.contains(where: { $0.stressAvg != nil }) {
+                        TrendCard(title: "Stress", unit: "", points: days.compactMap { d in d.stressAvg.map { (d.day, $0) } }, color: Theme.warn,
+                                  note: "Garmin's all-day stress score: under 25 is rest, over 75 is high.")
+                    }
+                    BodyBatteryCard(days: days)
                     TrendCard(title: "Exercise minutes", unit: "min", points: days.compactMap { d in d.exerciseMinutes.map { (d.day, $0) } }, bars: true, color: Theme.good)
                     TrendCard(title: "Active calories", unit: "kcal", points: days.compactMap { d in d.activeKcal.map { (d.day, $0) } }, bars: true, color: Theme.run)
                 }
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
-            .refreshable { await model.refresh() }
+            .refreshable { await model.refresh(forceGarmin: true) }
             .navigationTitle("Health")
         }
     }

@@ -8,12 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		571BEF93963DEEA67CAA9B98 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62AD3DD3C931AF31CC566E58 /* SettingsView.swift */; };
+		58DD187C515495049CECFB54 /* GarminService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73C74F0EC630E1FCE9996487 /* GarminService.swift */; };
 		72ED7EC38DEE9F020D7E95E0 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAE48CC414920CC2AE30D54D /* SwiftUI.framework */; };
 		7612AA9636A2556AC9A08BBF /* FitnessWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 49B599515F4731E71AAC68E5 /* FitnessWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		7C085A21D14C696B3CAD9573 /* HealthKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FA20E672F7AE61DA62D005D /* HealthKitService.swift */; };
 		7D93EE8ED401F240534CF9AB /* Provider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B850297C0FE14B670C99012E /* Provider.swift */; };
 		7E81C0A80616C57453EB19B7 /* FitnessCore in Frameworks */ = {isa = PBXBuildFile; productRef = 84BFB91B2AE8C8C4E5E8668C /* FitnessCore */; };
 		8B46CF7060A09654B6E3B9A1 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0949D280FAC1453DE3D05453 /* AppModel.swift */; };
+		8D363B830E9FA9C68FBF441C /* InsightViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15B5EA05C7BABC393FEF1EB0 /* InsightViews.swift */; };
 		91480B8391C3D38F54CD5AF9 /* HealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11AF4D17D0FA1562CDB2AD66 /* HealthView.swift */; };
 		9464F1ED033BB326CB1503CE /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B10B70F71226817A2BEFACA6 /* WidgetKit.framework */; };
 		9D4EE8125C76F3A3883FCA0A /* TrainingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70FD6970DBF1321F583BF6F8 /* TrainingView.swift */; };
@@ -54,6 +56,7 @@
 		04E124767D116ACC983D5928 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0949D280FAC1453DE3D05453 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		11AF4D17D0FA1562CDB2AD66 /* HealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthView.swift; sourceTree = "<group>"; };
+		15B5EA05C7BABC393FEF1EB0 /* InsightViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightViews.swift; sourceTree = "<group>"; };
 		162111CE65CFB16296993EB5 /* FitnessWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitnessWidgets.swift; sourceTree = "<group>"; };
 		2C9F294AD84A5A0CCC845B71 /* FitnessWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FitnessWidgets.entitlements; sourceTree = "<group>"; };
 		32CDC8B54459CA15449A4828 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -62,6 +65,7 @@
 		62AD3DD3C931AF31CC566E58 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		6FA20E672F7AE61DA62D005D /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
 		70FD6970DBF1321F583BF6F8 /* TrainingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingView.swift; sourceTree = "<group>"; };
+		73C74F0EC630E1FCE9996487 /* GarminService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarminService.swift; sourceTree = "<group>"; };
 		7AA1B4908CCD284C9A622022 /* Fitness.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Fitness.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C6E1723FCDDCC43B1795A91 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		A71DD4077F0CD7623AECD72A /* FitnessWidgets-free.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "FitnessWidgets-free.entitlements"; sourceTree = "<group>"; };
@@ -114,6 +118,7 @@
 				BD5A10571320662247A76C9E /* Fitness-free.entitlements */,
 				E5148A1B14D82499E6A6E897 /* Fitness.entitlements */,
 				BA10FA5DF0F6373BD9B93D48 /* FitnessApp.swift */,
+				73C74F0EC630E1FCE9996487 /* GarminService.swift */,
 				6FA20E672F7AE61DA62D005D /* HealthKitService.swift */,
 				32CDC8B54459CA15449A4828 /* Info.plist */,
 				A93EFF2FD427163B1C837610 /* Views */,
@@ -166,6 +171,7 @@
 			isa = PBXGroup;
 			children = (
 				11AF4D17D0FA1562CDB2AD66 /* HealthView.swift */,
+				15B5EA05C7BABC393FEF1EB0 /* InsightViews.swift */,
 				62AD3DD3C931AF31CC566E58 /* SettingsView.swift */,
 				AC189D23DD25287EB24AF501 /* TodayView.swift */,
 				70FD6970DBF1321F583BF6F8 /* TrainingView.swift */,
@@ -296,8 +302,10 @@
 				8B46CF7060A09654B6E3B9A1 /* AppModel.swift in Sources */,
 				AB0E540B7BC366A3DFF547D6 /* Components.swift in Sources */,
 				9D7419DAF6F116041C2B905C /* FitnessApp.swift in Sources */,
+				58DD187C515495049CECFB54 /* GarminService.swift in Sources */,
 				7C085A21D14C696B3CAD9573 /* HealthKitService.swift in Sources */,
 				91480B8391C3D38F54CD5AF9 /* HealthView.swift in Sources */,
+				8D363B830E9FA9C68FBF441C /* InsightViews.swift in Sources */,
 				571BEF93963DEEA67CAA9B98 /* SettingsView.swift in Sources */,
 				F806805D656424BB1AFB256E /* TodayView.swift in Sources */,
 				9D4EE8125C76F3A3883FCA0A /* TrainingView.swift in Sources */,
