@@ -45,6 +45,8 @@ public struct Snapshot: Codable, Sendable, Equatable {
     public var records: Records
     public var lastWorkout: Workout?
     public var todaysWorkouts: [Workout]
+    /// Your race plan, if you've made one
+    public var race: RaceSummary?
 
     public var newBests: [Best] { records.bests.filter(\.isNew) }
 }
@@ -77,7 +79,30 @@ extension Coach {
             sleep: sleepInsights(data, settings: settings, today: today),
             records: records(data, today: today),
             lastWorkout: data.workouts.last { $0.day <= today },
-            todaysWorkouts: todays)
+            todaysWorkouts: todays,
+            race: settings.race.map { RaceSummary.make(Coach.racePlan($0), data: data, today: today) })
+    }
+}
+
+/// The race plan in short, for the Today screen and the widgets
+public struct RaceSummary: Codable, Sendable, Equatable {
+    public var goal: String
+    public var raceDate: Day
+    public var daysToGo: Int
+    public var today: PlanDay?
+    /// This week's days with whether each was done
+    public var week: [PlanDay]
+    public var status: [String: DayStatus]
+    public var done: Int
+    public var planned: Int
+
+    static func make(_ plan: RacePlan, data: HealthData, today: Day) -> RaceSummary {
+        let week = plan.week(of: today)
+        let p = Coach.progress(plan, data: data, today: today)
+        return RaceSummary(goal: plan.settings.goal.label, raceDate: plan.settings.raceDate,
+                           daysToGo: max(today.days(until: plan.settings.raceDate), 0), today: plan.day(today), week: week,
+                           status: Dictionary(uniqueKeysWithValues: week.map { ($0.day.iso, Coach.status($0, data: data, today: today)) }),
+                           done: p.done, planned: p.planned)
     }
 }
 

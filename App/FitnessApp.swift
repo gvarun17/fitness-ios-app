@@ -30,7 +30,8 @@ enum Tab: String, Hashable { case today, training, health, settings }
 
 struct RootView: View {
     @EnvironmentObject var model: AppModel
-    @State private var tab: Tab = .today
+    // Launch argument -startTab training opens another tab (handy for testing)
+    @State private var tab: Tab = Tab(rawValue: UserDefaults.standard.string(forKey: "startTab") ?? "") ?? .today
 
     var body: some View {
         if model.needsOnboarding {
@@ -38,13 +39,14 @@ struct RootView: View {
         } else {
             TabView(selection: $tab) {
                 TodayView().tabItem { Label("Today", systemImage: "sun.max") }.tag(Tab.today)
-                TrainingView().tabItem { Label("Training", systemImage: "figure.run") }.tag(Tab.training)
+                TrainingView().tabItem { Label("Running", systemImage: "figure.run") }.tag(Tab.training)
                 HealthView().tabItem { Label("Health", systemImage: "heart.text.square") }.tag(Tab.health)
                 SettingsView().tabItem { Label("Settings", systemImage: "gearshape") }.tag(Tab.settings)
             }
             // Widgets open the matching tab: fitnesscoach://training
             .onOpenURL { url in
-                if let t = Tab(rawValue: url.host() ?? "") { tab = t }
+                let host = url.host() == "running" ? "training" : url.host() ?? ""      // fitnesscoach://running works too
+                if let t = Tab(rawValue: host) { tab = t }
             }
         }
     }

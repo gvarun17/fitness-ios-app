@@ -18,6 +18,13 @@ struct TodayView: View {
                         DayHeader(day: day, back: $back, synced: back == 0 ? v.summary?.syncedAt : nil)
                         if s.isDemo { DemoBanner() }
                         if back == 0 { ReadinessCard(r: s.readiness) }
+                        if back == 0, let r = s.race, let t = r.today {
+                            Card {
+                                Text("TODAY'S PLAN · \(r.goal.uppercased()) IN \(r.daysToGo) DAYS").font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                                Label(t.title, systemImage: t.kind.symbol).font(.headline)
+                                if !t.detail.isEmpty { Text(t.detail).font(.caption).foregroundStyle(.secondary) }
+                            }
+                        }
                         DayMetrics(v: v, today: back == 0)
                         DayCharts(v: v, today: back == 0)
                         if back == 0, !s.newBests.isEmpty { NewBestsCard(bests: s.newBests) }

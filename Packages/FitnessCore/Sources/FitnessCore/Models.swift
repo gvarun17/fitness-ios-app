@@ -316,9 +316,16 @@ public struct UserSettings: Codable, Sendable, Equatable {
     /// nil = the suggested target
     public var goalValue: Double?
     public var sleepNeedHours: Double
+    /// Your changes to the weekly plan (nil = the suggested plan). Optional so
+    /// settings saved by older versions still load.
+    public var plan: PlanSettings?
+    /// The day-by-day plan to a race, if you've made one
+    public var race: RaceSettings?
 
-    public init(name: String = "", goalType: GoalType = .minutes, goalValue: Double? = nil, sleepNeedHours: Double = 8) {
+    public init(name: String = "", goalType: GoalType = .minutes, goalValue: Double? = nil, sleepNeedHours: Double = 8,
+                plan: PlanSettings? = nil, race: RaceSettings? = nil) {
         self.name = name; self.goalType = goalType; self.goalValue = goalValue; self.sleepNeedHours = sleepNeedHours
+        self.plan = plan; self.race = race
     }
 
     public var goalTarget: Double { goalValue ?? goalType.suggested }

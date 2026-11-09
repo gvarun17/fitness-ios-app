@@ -2,16 +2,32 @@ import Charts
 import FitnessCore
 import SwiftUI
 
+/// The Running screen: goal, plans (all editable), milestones and running stats
 struct TrainingView: View {
     @EnvironmentObject var model: AppModel
+    @State private var sheet: Sheet?
+
+    enum Sheet: String, Identifiable {
+        case goal, plan, race
+        var id: String { rawValue }
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 if let s = model.snapshot {
                     VStack(alignment: .leading, spacing: 16) {
-                        GoalCard(g: s.goal)
-                        PlanCard(p: s.plan, rest: s.readiness.level == .rest)
+                        GoalCard(g: s.goal, edit: { sheet = .goal })
+                        if let r = s.race {
+                            RacePlanCard(r: r, rest: s.readiness.level == .rest)
+                        } else {
+                            PlanCard(p: s.plan, rest: s.readiness.level == .rest, edit: { sheet = .plan })
+                            Button { sheet = .race } label: {
+                                Label("Make a day-by-day plan for a race (5K to marathon)", systemImage: "calendar.badge.plus")
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
                         MilestonesCard(m: s.milestones)
                         let data = model.data, today = model.today
                         let weeks = Coach.sportWeeks(data, today: today)
@@ -29,16 +45,28 @@ struct TrainingView: View {
             }
             .background(Color(.systemGroupedBackground))
             .refreshable { await model.refresh(forceGarmin: true) }
-            .navigationTitle("Training")
+            .navigationTitle("Running")
+            .sheet(item: $sheet) { which in
+                switch which {
+                case .goal: GoalEditor()
+                case .plan: PlanEditor()
+                case .race: RaceEditor()
+                }
+            }
         }
     }
 }
 
 struct GoalCard: View {
     var g: WeeklyGoal
+    var edit: () -> Void = {}
     var body: some View {
         Card {
-            Text("THIS WEEK · \(g.type.label.uppercased())").font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+            HStack {
+                Text("THIS WEEK · \(g.type.label.uppercased())").font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                Spacer()
+                Button("Edit", action: edit).font(.subheadline)
+            }
             HStack(spacing: 18) {
                 Ring(progress: g.progress, color: g.reached ? Theme.good : Theme.accent, lineWidth: 12) {
                     VStack(spacing: 0) {
@@ -58,7 +86,7 @@ struct GoalCard: View {
                     Text(g.streak > 0 ? "\(g.streak)-week streak\(g.best > g.streak ? " (best \(g.best))" : "")" : "Hit it this week to start a streak")
                         .font(.subheadline)
                     if g.of > 0 { Text("Hit in \(g.hits) of the last \(g.of) weeks").font(.caption).foregroundStyle(.secondary) }
-                    if g.suggested { Text("Suggested goal. Change it in Settings.").font(.caption2).foregroundStyle(.secondary) }
+                    if g.suggested { Text("Suggested goal. Tap Edit to set your own.").font(.caption2).foregroundStyle(.secondary) }
                 }
             }
         }
@@ -68,9 +96,14 @@ struct GoalCard: View {
 struct PlanCard: View {
     var p: TrainingPlan
     var rest: Bool
+    var edit: () -> Void = {}
     var body: some View {
         Card {
-            Text("YOUR PLAN\(p.week.easier ? " · EASIER WEEK" : "")").font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+            HStack {
+                Text("YOUR WEEKLY PLAN\(p.week.easier ? " · EASIER WEEK" : "")").font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                Spacer()
+                Button("Edit", action: edit).font(.subheadline)
+            }
             Text("Road to \(p.target) · \(p.perWeek) runs a week").font(.headline)
             Text(p.week.intervals.map { "\($0), for the distance below." } ?? "Easy runs at a pace where you can talk in full sentences.")
                 .font(.caption).foregroundStyle(.secondary)

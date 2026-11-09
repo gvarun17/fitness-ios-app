@@ -220,7 +220,34 @@ struct PlanView: View {
     @Environment(\.widgetFamily) var family
 
     var body: some View {
-        if let s = entry.snapshot {
+        if let s = entry.snapshot, let r = s.race {
+            // The day-by-day race plan: countdown and this week's days
+            VStack(alignment: .leading, spacing: 5) {
+                HStack {
+                    Text("\(r.goal) plan").font(.headline)
+                    Spacer()
+                    Text(r.daysToGo == 0 ? "Race day!" : "\(r.daysToGo) days to go").font(.caption.bold()).foregroundStyle(Theme.accent)
+                }
+                if let t = r.today { Label("Today: \(t.title)", systemImage: t.kind.symbol).font(.caption.bold()) }
+                ForEach(r.week.filter { $0.kind != .rest }.prefix(family == .systemLarge ? 7 : 3)) { d in
+                    HStack {
+                        Image(systemName: r.status[d.day.iso] == .done ? "checkmark.circle.fill" : r.status[d.day.iso] == .missed ? "xmark.circle" : "circle")
+                            .foregroundStyle(r.status[d.day.iso] == .done ? Theme.good : r.status[d.day.iso] == .missed ? Theme.bad : .secondary)
+                        Text(d.day.text(.weekday)).bold()
+                        Text(d.kind.label)
+                        Spacer()
+                        if d.km > 0 { Text("\(Fmt.km(d.km)) km").foregroundStyle(.secondary) }
+                    }
+                    .font(.caption)
+                }
+                if family == .systemLarge {
+                    Divider()
+                    Text("\(r.done) of \(r.planned) planned runs done so far · race on \(r.raceDate.text(.short))")
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 0)
+            }
+        } else if let s = entry.snapshot {
             let p = s.plan
             VStack(alignment: .leading, spacing: 6) {
                 Text("Road to \(p.target)").font(.headline)

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1FC38ED8C9E64FA58B668681 /* PlanEditors.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDB87BD9727E16F094F91B99 /* PlanEditors.swift */; };
 		571BEF93963DEEA67CAA9B98 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62AD3DD3C931AF31CC566E58 /* SettingsView.swift */; };
 		58DD187C515495049CECFB54 /* GarminService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73C74F0EC630E1FCE9996487 /* GarminService.swift */; };
 		72ED7EC38DEE9F020D7E95E0 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAE48CC414920CC2AE30D54D /* SwiftUI.framework */; };
@@ -76,6 +77,7 @@
 		BD5A10571320662247A76C9E /* Fitness-free.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Fitness-free.entitlements"; sourceTree = "<group>"; };
 		C7F3A2DBE6017B58D057E264 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DAE48CC414920CC2AE30D54D /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		DDB87BD9727E16F094F91B99 /* PlanEditors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanEditors.swift; sourceTree = "<group>"; };
 		E5148A1B14D82499E6A6E897 /* Fitness.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Fitness.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -172,6 +174,7 @@
 			children = (
 				11AF4D17D0FA1562CDB2AD66 /* HealthView.swift */,
 				15B5EA05C7BABC393FEF1EB0 /* InsightViews.swift */,
+				DDB87BD9727E16F094F91B99 /* PlanEditors.swift */,
 				62AD3DD3C931AF31CC566E58 /* SettingsView.swift */,
 				AC189D23DD25287EB24AF501 /* TodayView.swift */,
 				70FD6970DBF1321F583BF6F8 /* TrainingView.swift */,
@@ -306,6 +309,7 @@
 				7C085A21D14C696B3CAD9573 /* HealthKitService.swift in Sources */,
 				91480B8391C3D38F54CD5AF9 /* HealthView.swift in Sources */,
 				8D363B830E9FA9C68FBF441C /* InsightViews.swift in Sources */,
+				1FC38ED8C9E64FA58B668681 /* PlanEditors.swift in Sources */,
 				571BEF93963DEEA67CAA9B98 /* SettingsView.swift in Sources */,
 				F806805D656424BB1AFB256E /* TodayView.swift in Sources */,
 				9D4EE8125C76F3A3883FCA0A /* TrainingView.swift in Sources */,

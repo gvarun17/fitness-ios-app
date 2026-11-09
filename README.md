@@ -17,9 +17,30 @@ straight from the phone; the key lives in the iPhone's Keychain.
 | Screen | What you see |
 |---|---|
 | **Today** | ‹ Today › to step back through the last 90 days. Today's call (train, take it easy or rest) from HRV (Garmin's HRV status when connected), sleep (Garmin's sleep score), resting heart rate, Body Battery and training load. The day's steps, exercise, calories, resting HR, heart rate range, Body Battery, stress, sleep, HRV, breathing and floors; heart rate and Body Battery through the day (Garmin, last 7 days); new personal bests; the day's workouts. Tap a workout for its stats, heart rate zones, run/walk split and second-by-second graphs of heart rate, pace, cadence, power and elevation. |
-| **Training** | Weekly goal ring and streak; training plan; milestone ladder from first run to Ironman; six tiles comparing this week with recent weeks (distance, steps, resting HR, HRV, sleep, training load); distance / time / sessions by sport for 12 weeks with a this-week-vs-usual table; exercise minutes per week against 150; training load per week by sport; time in heart rate zones over 4 weeks; running form charts; personal bests and firsts; your five biggest days. |
+| **Running** | Weekly goal ring and streak (**Edit** to change it). **Your weekly plan** (**Edit**: runs per week, which days, which milestone it builds toward, how fast the long run grows, how often an easier week comes) or **your race plan** (below). Milestone ladder; tiles comparing this week with recent weeks; distance / time / sessions by sport; exercise minutes per week; training load per week; heart rate zones; running form; personal bests and firsts; biggest days. |
 | **Health** | Sleep insights for the last 2 weeks (vs your need, sleep debt, bedtime consistency, overnight stress, when you slept, tips); stress, Body Battery and calorie tiles; steps heatmap for 6 months; workouts other than running (hours per week and recent sessions); charts for steps, resting HR, HRV, sleep and sleep stages, stress, Body Battery high/low, exercise and active calories over 1M / 3M / 6M / 1Y. |
 | **Settings** | Your name, weekly goal, sleep target, Apple Health, Garmin (connect, sync now, disconnect), demo data. |
+
+### Race plans: day by day to 5K, 10K, half marathon or marathon
+
+On the Running screen, **Make a day-by-day plan for a race**: pick the race, the race
+date, runs per week (2-6), your long-run day, an optional strength day and your
+longest recent run. The plan runs from today to race day:
+
+- **Build:** the long run grows about 10% a week from where you are now, with an
+  easier week every 4th; easy runs in between, and from week 3 one quality session a
+  week (intervals for 5K/10K, tempo for half/marathon, alternating). Run-walk advice
+  while runs are short. Never a run the day after the long run.
+- **Taper:** 1 week (5K, 10K), 2 (half) or 3 (marathon) of shorter long runs.
+- **Race week:** short easy runs, rest the two days before, then race day.
+- **Too soon?** The preview warns when the date leaves too little time to build up
+  and suggests the earliest comfortable date.
+
+Each day shows ✓ when a run that day covered it (80% of the distance, or any run for
+intervals and tempo), ✗ when missed. Tap any day to change it (another workout,
+distance, notes) or skip it; **Reset to the plan** undoes that. **Edit plan** changes
+the race, date or week (keeping your edited days if you like) or deletes the plan.
+Today's planned workout also shows on the Today screen and in the Training plan widget.
 
 ### Widgets
 
@@ -110,7 +131,7 @@ fitness-ios/
 ├── project.yml              Xcode project definition (XcodeGen); Fitness.xcodeproj is generated from it
 ├── Packages/FitnessCore/    Swift package: data models + all coaching logic, no Apple Health or UI code
 │   ├── Sources/FitnessCore/ Readiness, Goals, Milestones, Plan, Bests, Sleep, Insights, Garmin, Snapshot, DemoData
-│   └── Tests/               47 tests (Swift Testing), including a fake Garmin that answers with made-up data
+│   └── Tests/               54 tests (Swift Testing), including a fake Garmin that answers with made-up data
 ├── App/                     SwiftUI app: Apple Health reading, Garmin sync (GarminService: Keychain + cache), screens
 ├── Widgets/                 WidgetKit extension: 8 widgets
 ├── Shared/                  Colours and small views used by both the app and the widgets

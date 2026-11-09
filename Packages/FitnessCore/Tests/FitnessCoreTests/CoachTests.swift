@@ -265,7 +265,7 @@ func workout(_ day: String, _ sport: Sport, km: Double = 0, minutes: Double = 30
     }
 
     @Test func runsPerWeekStaysSensible() {
-        #expect(plan([], UserSettings(goalType: .runs, goalValue: 9)).perWeek == 5)
+        #expect(plan([], UserSettings(goalType: .runs, goalValue: 9)).perWeek == 6)
         #expect(plan([], UserSettings(goalType: .runs, goalValue: 1)).perWeek == 2)
         #expect(plan([], UserSettings(goalType: .km, goalValue: 20)).perWeek == 3)
     }
