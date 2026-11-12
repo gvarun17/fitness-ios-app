@@ -57,6 +57,8 @@ final class Run {
     var effort: Int = 0
     var plannedWorkoutID: String?
     var savedToHealth: Bool = false
+    /// Identifier of the activity this run was imported from (e.g. "garmin:123"), nil for runs recorded here.
+    var externalID: String?
     /// JSON-encoded [TrackPoint].
     @Attribute(.externalStorage) var pointsData: Data?
     /// JSON-encoded [Double]: route normalized for drawing a thumbnail.

@@ -13,6 +13,7 @@ An iOS app for running, and only running. SwiftUI, iOS 17+, no third-party depen
 - **Training plans**: 5K, 10K and half-marathon plans built back from your race date, with a "today" card that starts the workout in one tap.
 - **Shoes**: per-shoe mileage with replacement warnings.
 - **Heart rate sensors**: connects directly over Bluetooth to a chest strap (Polar H10 and similar) or a watch broadcasting heart rate (Garmin), with live zones, auto-reconnect and time-in-zone after the run.
+- **Garmin import**: paste a Garmin Connect Personal API key to import your running history (routes, pace, heart rate, elevation) from Garmin's activity files, or import `.fit` files directly. The key is kept in the Keychain.
 - **Apple Health** (optional): saves runs as workouts with routes and heart rate; reads heart rate from Health when no Bluetooth sensor is connected.
 
 ## Running it
@@ -27,7 +28,7 @@ Requires Xcode 16 or later.
 
 | Path | What it is |
 | --- | --- |
-| `RunCore/` | Swift package with all run logic and no UI or Apple-framework dependencies: GPS filtering, distance, splits, auto-pause, best efforts, intervals, goals, stats, spoken text, plan generation. |
+| `RunCore/` | Swift package with all run logic and no UI or Apple-framework dependencies: GPS filtering, distance, splits, auto-pause, best efforts, intervals, goals, stats, spoken text, plan generation, heart-rate decoding, FIT file decoding and Garmin API request building. |
 | `Stride/Services/` | Location, audio, Bluetooth heart rate, HealthKit, the live `RunSession`, and saving runs. |
 | `Stride/Models/` | SwiftData models: `Run`, `Shoe`, `PlanRecord`, `SavedWorkout`. |
 | `Stride/Views/` | Screens, grouped by tab. |

@@ -77,6 +77,37 @@ enum RunStore {
         return run
     }
 
+    /// Stores a run recorded elsewhere. The caller saves the context (imports are batched).
+    @discardableResult
+    static func insert(_ imported: ImportedRun, title: String?, externalID: String?, in context: ModelContext) -> Run {
+        let run = Run(startDate: imported.startDate, endDate: imported.endDate,
+                      duration: imported.duration, distance: imported.distance)
+        run.elevationGain = imported.elevationGain
+        run.calories = imported.calories
+            ?? Calories.estimate(distanceMeters: imported.distance, weightKg: AppSettings.weightKg)
+        let name = title?.trimmingCharacters(in: .whitespaces) ?? ""
+        run.title = name.isEmpty ? defaultTitle(for: imported.startDate, tag: .easy) : name
+        run.externalID = externalID
+        run.averageHeartRate = imported.averageHeartRate
+        run.maxHeartRate = imported.maxHeartRate
+
+        let encoder = JSONEncoder()
+        if !imported.points.isEmpty {
+            run.pointsData = try? encoder.encode(imported.points)
+            run.thumbnailData = try? encoder.encode(RouteThumbnail.normalized(imported.points))
+            var efforts: [String: Double] = [:]
+            for (id, time) in BestEfforts.all(points: imported.points) {
+                efforts[String(id)] = time
+            }
+            run.bestEffortsData = try? encoder.encode(efforts)
+        }
+        if !imported.heartRates.isEmpty {
+            run.heartRateData = try? encoder.encode(imported.heartRates.map { HeartRateSample(t: $0.t, bpm: $0.bpm) })
+        }
+        context.insert(run)
+        return run
+    }
+
     static func delete(_ run: Run, in context: ModelContext) {
         context.delete(run)
         try? context.save()

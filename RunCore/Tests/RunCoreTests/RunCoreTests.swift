@@ -496,3 +496,198 @@ final class HeartRateTests: XCTestCase {
         XCTAssertEqual(zones, [5, 5, 5, 0, 5])
     }
 }
+
+/// Builds minimal FIT files for tests.
+private struct FITBuilder {
+    var body: [UInt8] = []
+
+    private func le(_ value: UInt32, _ size: Int) -> [UInt8] {
+        (0..<size).map { UInt8(truncatingIfNeeded: value >> (8 * UInt32($0))) }
+    }
+
+    /// `fields` are (number, size, base type).
+    mutating func define(local: UInt8, global: UInt16, fields: [(UInt8, UInt8, UInt8)], developerFieldSize: UInt8? = nil) {
+        body.append(0x40 | local | (developerFieldSize == nil ? 0 : 0x20))
+        body += [0, 0] + le(UInt32(global), 2) + [UInt8(fields.count)]
+        for field in fields { body += [field.0, field.1, field.2] }
+        if let developerFieldSize { body += [1, 0, developerFieldSize, 0] }
+    }
+
+    /// `values` are (value, size) in definition order.
+    mutating func data(local: UInt8, _ values: [(UInt32, Int)], trailing: [UInt8] = []) {
+        body.append(local)
+        for value in values { body += le(value.0, value.1) }
+        body += trailing
+    }
+
+    mutating func compressed(local: UInt8, offset: UInt8, _ values: [(UInt32, Int)]) {
+        body.append(0x80 | (local << 5) | offset)
+        for value in values { body += le(value.0, value.1) }
+    }
+
+    var file: [UInt8] {
+        var out: [UInt8] = [14, 0x20, 0, 0]
+        out += le(UInt32(body.count), 4)
+        out += [0x2E, 0x46, 0x49, 0x54, 0, 0]
+        return out + body + [0, 0]
+    }
+}
+
+final class ImportTests: XCTestCase {
+    private let fitStart: UInt32 = 1_100_000_000
+    private var startDate: Date { Date(timeIntervalSince1970: 1_100_000_000 + 631_065_600) }
+
+    private func semicircles(_ degrees: Double) -> UInt32 {
+        UInt32(bitPattern: Int32(degrees * 2_147_483_648 / 180))
+    }
+
+    /// 100 s running north at 3 m/s, a 60 s stop, then another 100 s.
+    private func sampleFile() -> [UInt8] {
+        var fit = FITBuilder()
+        // record: timestamp, lat, lon, distance, altitude, heart rate; one developer byte to skip.
+        fit.define(local: 0, global: 20,
+                   fields: [(253, 4, 0x86), (0, 4, 0x85), (1, 4, 0x85), (5, 4, 0x86), (2, 2, 0x84), (3, 1, 0x02)],
+                   developerFieldSize: 1)
+        // event: timestamp, event, event type.
+        fit.define(local: 1, global: 21, fields: [(253, 4, 0x86), (0, 1, 0x00), (1, 1, 0x00)])
+        // session: timestamp, start, sport, elapsed, timer, distance, calories, ascent.
+        fit.define(local: 2, global: 18,
+                   fields: [(253, 4, 0x86), (2, 4, 0x86), (5, 1, 0x00), (7, 4, 0x86), (8, 4, 0x86), (9, 4, 0x86), (11, 2, 0x84), (22, 2, 0x84)])
+        // An unrelated message type that must be skipped.
+        fit.define(local: 3, global: 999, fields: [(0, 2, 0x84)])
+        fit.data(local: 3, [(7, 2)])
+
+        fit.data(local: 1, [(fitStart, 4), (0, 1), (0, 1)])
+        func record(_ second: Int, meters: Double) {
+            let lat = semicircles(40 + meters / 111_195)
+            let altitude = UInt32((100 + 500) * 5)
+            fit.data(local: 0, [(fitStart + UInt32(second), 4), (lat, 4), (semicircles(-74), 4),
+                                (UInt32(meters * 100), 4), (altitude, 2), (UInt32(140 + (second / 5) % 5), 1)],
+                     trailing: [0xAA])
+        }
+        for second in stride(from: 0, through: 100, by: 5) { record(second, meters: Double(second) * 3) }
+        fit.data(local: 1, [(fitStart + 100, 4), (0, 1), (4, 1)])
+        fit.data(local: 1, [(fitStart + 160, 4), (0, 1), (0, 1)])
+        for second in stride(from: 160, through: 260, by: 5) { record(second, meters: 300 + Double(second - 160) * 3) }
+        fit.data(local: 1, [(fitStart + 260, 4), (0, 1), (4, 1)])
+        fit.data(local: 2, [(fitStart + 260, 4), (fitStart, 4), (1, 1), (260_000, 4), (200_000, 4), (60_000, 4), (41, 2), (12, 2)])
+        return fit.file
+    }
+
+    func testDecodesRecordsSessionAndEvents() throws {
+        let file = try FITDecoder.decode(sampleFile())
+        XCTAssertEqual(file.records.count, 42)
+        XCTAssertEqual(file.records[0].time, startDate)
+        XCTAssertEqual(file.records[0].latitude!, 40, accuracy: 1e-6)
+        XCTAssertEqual(file.records[0].longitude!, -74, accuracy: 1e-6)
+        XCTAssertEqual(file.records[0].altitude!, 100, accuracy: 0.001)
+        XCTAssertEqual(file.records[0].heartRate, 140)
+        XCTAssertEqual(file.records[20].distance!, 300, accuracy: 0.01)
+        XCTAssertEqual(file.session?.sport, 1)
+        XCTAssertEqual(file.session?.totalTimerTime, 200)
+        XCTAssertEqual(file.session?.totalDistance, 600)
+        XCTAssertEqual(file.session?.totalAscent, 12)
+        XCTAssertEqual(file.timerEvents.map(\.isStart), [true, false, true, false])
+    }
+
+    func testConvertsToRunExcludingPause() throws {
+        let run = ActivityImport.run(from: try FITDecoder.decode(sampleFile()))!
+        XCTAssertTrue(run.isRun)
+        XCTAssertEqual(run.startDate, startDate)
+        XCTAssertEqual(run.duration, 200)
+        XCTAssertEqual(run.distance, 600)
+        XCTAssertEqual(run.elevationGain, 12)
+        XCTAssertEqual(run.calories, 41)
+        XCTAssertEqual(run.points.count, 42)
+        XCTAssertEqual(run.points.last!.d, 600, accuracy: 0.01)
+        XCTAssertEqual(run.points.last!.e, 200, accuracy: 0.001)
+        // The first point after the pause carries on at 100 s, not 160 s.
+        XCTAssertEqual(run.points[21].e, 100, accuracy: 0.001)
+        XCTAssertTrue(zip(run.points, run.points.dropFirst()).allSatisfy { $0.e <= $1.e && $0.d <= $1.d })
+        XCTAssertFalse(run.heartRates.isEmpty)
+        XCTAssertEqual(run.maxHeartRate!, 144, accuracy: 0.001)
+        // Works with the app's own analysis: 600 m at 3 m/s.
+        XCTAssertEqual(BestEfforts.fastest(points: run.points, target: 500)!, 500 / 3, accuracy: 1)
+    }
+
+    func testFallsBackWithoutSessionOrDeviceDistance() throws {
+        var fit = FITBuilder()
+        fit.define(local: 0, global: 20, fields: [(253, 4, 0x86), (0, 4, 0x85), (1, 4, 0x85)])
+        for second in 0...60 {
+            fit.data(local: 0, [(fitStart + UInt32(second), 4), (semicircles(40 + Double(second) * 3 / 111_195), 4), (semicircles(-74), 4)])
+        }
+        let run = ActivityImport.run(from: try FITDecoder.decode(fit.file))!
+        XCTAssertEqual(run.distance, 180, accuracy: 1)
+        XCTAssertEqual(run.duration, 60, accuracy: 0.001)
+        XCTAssertNil(run.averageHeartRate)
+    }
+
+    func testCompressedTimestampsBigEndianAndInvalidValues() throws {
+        var fit = FITBuilder()
+        // Big-endian record definition: timestamp + heart rate.
+        fit.body += [0x40, 0, 1, 0, 20, 2, 253, 4, 0x86, 3, 1, 0x02]
+        let t = fitStart
+        fit.body += [0x00, UInt8(t >> 24), UInt8(t >> 16 & 0xFF), UInt8(t >> 8 & 0xFF), UInt8(t & 0xFF), 150]
+        // Local type 1: heart rate only, timed by compressed headers.
+        fit.define(local: 1, global: 20, fields: [(3, 1, 0x02)])
+        let base = UInt8(t & 0x1F)
+        fit.compressed(local: 1, offset: (base + 3) & 0x1F, [(151, 1)])
+        fit.compressed(local: 1, offset: (base + 1) & 0x1F, [(0xFF, 1)])   // wraps: +30 s; invalid heart rate
+        let file = try FITDecoder.decode(fit.file)
+        XCTAssertEqual(file.records.map { $0.time.timeIntervalSince(startDate) }, [0, 3, 33])
+        XCTAssertEqual(file.records.map(\.heartRate), [150, 151, nil])
+    }
+
+    func testRejectsNonFITAndTruncatedFiles() {
+        XCTAssertThrowsError(try FITDecoder.decode([1, 2, 3]))
+        XCTAssertThrowsError(try FITDecoder.decode([UInt8](repeating: 0, count: 40)))
+        // A file cut short mid-message still yields the records before the cut.
+        var bytes = sampleFile()
+        bytes.removeLast(300)
+        let partial = try? FITDecoder.decode(bytes)
+        XCTAssertNotNil(partial)
+        XCTAssertGreaterThan(partial?.records.count ?? 0, 20)
+        XCTAssertLessThan(partial?.records.count ?? 99, 42)
+        XCTAssertNil(ActivityImport.run(from: FITFile()))
+    }
+
+    func testZipDirectory() {
+        let zip: [UInt8] = [80,75,3,4,20,0,0,0,0,0,0,0,33,0,134,166,16,54,5,0,0,0,5,0,0,0,9,0,0,0,110,111,116,101,115,46,116,120,116,104,101,108,108,111,80,75,3,4,20,0,0,0,8,0,0,0,33,0,197,217,11,217,7,0,0,0,24,0,0,0,16,0,0,0,49,50,51,95,65,67,84,73,86,73,84,89,46,102,105,116,115,116,114,118,196,134,0,80,75,1,2,20,3,20,0,0,0,0,0,0,0,33,0,134,166,16,54,5,0,0,0,5,0,0,0,9,0,0,0,0,0,0,0,0,0,0,0,128,1,0,0,0,0,110,111,116,101,115,46,116,120,116,80,75,1,2,20,3,20,0,0,0,8,0,0,0,33,0,197,217,11,217,7,0,0,0,24,0,0,0,16,0,0,0,0,0,0,0,0,0,0,0,128,1,44,0,0,0,49,50,51,95,65,67,84,73,86,73,84,89,46,102,105,116,80,75,5,6,0,0,0,0,2,0,2,0,117,0,0,0,97,0,0,0,0,0]
+        XCTAssertTrue(ZipArchive.isZip(zip))
+        let entries = ZipArchive.entries(zip)!
+        XCTAssertEqual(entries.map(\.name), ["notes.txt", "123_ACTIVITY.fit"])
+        XCTAssertEqual(entries[0].method, 0)
+        XCTAssertEqual(String(decoding: entries[0].data, as: UTF8.self), "hello")
+        XCTAssertEqual(entries[1].method, 8)
+        XCTAssertEqual(entries[1].data.count, 7)
+        XCTAssertEqual(entries[1].uncompressedSize, 24)
+        XCTAssertNil(ZipArchive.entries([1, 2, 3]))
+        XCTAssertFalse(ZipArchive.isZip([0x0E, 0x20]))
+    }
+
+    func testGarminRequestsAndParsing() throws {
+        XCTAssertEqual(GarminAPI.tokenURL.absoluteString,
+                       "https://personal.connectapi.garmin.com/personalapitoken-service/personal-api/personal-api-key/token")
+        let list = GarminAPI.activitiesURL(start: 50, limit: 50, since: Date(timeIntervalSince1970: 1_788_213_678)).absoluteString
+        XCTAssertTrue(list.hasPrefix("https://personal.connectapi.garmin.com/activitylist-service/activities/search/activities?"))
+        XCTAssertTrue(list.contains("activityType=running"))
+        XCTAssertTrue(list.contains("start=50"))
+        XCTAssertTrue(list.contains("startDate=2026-08-31"))
+        XCTAssertEqual(GarminAPI.downloadURL(activityID: 42).path, "/download-service/files/activity/42")
+
+        XCTAssertEqual(GarminAPI.parseToken(Data(#"{"access_token":"abc","expires_in":86400}"#.utf8)), "abc")
+        XCTAssertEqual(GarminAPI.parseToken(Data(#"{"accessToken":"def"}"#.utf8)), "def")
+        XCTAssertEqual(GarminAPI.parseToken(Data("ghi\n".utf8)), "ghi")
+        XCTAssertNil(GarminAPI.parseToken(Data(#"{"error":"invalid key"}"#.utf8)))
+        XCTAssertNil(GarminAPI.parseToken(Data("<html>Unauthorized</html>".utf8)))
+
+        let json = #"[{"activityId":9001,"activityName":"Morning Run","startTimeGMT":"2026-08-31 22:01:18","beginTimestamp":1788213678000,"distance":8020.5,"duration":2400.93,"activityType":{"typeId":1,"typeKey":"running","parentTypeId":17},"unknownField":true},{"activityId":9002,"startTimeGMT":"2026-08-31 22:01:18"}]"#
+        let activities = try GarminAPI.parseActivities(Data(json.utf8))
+        XCTAssertEqual(activities.count, 2)
+        XCTAssertEqual(activities[0].activityName, "Morning Run")
+        XCTAssertEqual(activities[0].activityType?.typeKey, "running")
+        XCTAssertEqual(activities[0].startDate, Date(timeIntervalSince1970: 1_788_213_678))
+        XCTAssertEqual(activities[1].startDate, Date(timeIntervalSince1970: 1_788_213_678))
+        XCTAssertEqual(GarminAPI.externalID(activityID: 9001), "garmin:9001")
+    }
+}

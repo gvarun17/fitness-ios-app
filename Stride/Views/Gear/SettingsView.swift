@@ -29,6 +29,18 @@ struct SettingsView: View {
 
                 Section {
                     NavigationLink {
+                        GarminView()
+                    } label: {
+                        Label("Garmin Connect", systemImage: "square.and.arrow.down")
+                    }
+                } header: {
+                    Text("Import")
+                } footer: {
+                    Text("Bring in your running history from Garmin.")
+                }
+
+                Section {
+                    NavigationLink {
                         SensorsView()
                     } label: {
                         LabeledContent {
