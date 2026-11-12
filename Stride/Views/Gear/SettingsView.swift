@@ -12,6 +12,8 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.keepScreenOn) private var keepScreenOn = true
     @AppStorage(SettingsKey.appearance) private var appearance = "dark"
     @AppStorage(SettingsKey.healthEnabled) private var healthEnabled = false
+    @AppStorage(SettingsKey.maxHeartRate) private var maxHeartRate = 190.0
+    @ObservedObject private var monitor = HeartRateMonitor.shared
     @State private var healthUnavailable = false
 
     var body: some View {
@@ -23,6 +25,25 @@ struct SettingsView: View {
                     } label: {
                         Label("Shoes", systemImage: "shoe.fill")
                     }
+                }
+
+                Section {
+                    NavigationLink {
+                        SensorsView()
+                    } label: {
+                        LabeledContent {
+                            Text(monitor.pairedName ?? "Not set up")
+                        } label: {
+                            Label("Sensor", systemImage: "heart.fill")
+                        }
+                    }
+                    Stepper(value: $maxHeartRate, in: 120...230, step: 1) {
+                        LabeledContent("Max heart rate", value: "\(Int(maxHeartRate)) bpm")
+                    }
+                } header: {
+                    Text("Heart rate")
+                } footer: {
+                    Text("Connect a chest strap such as a Polar H10, or a watch that broadcasts heart rate. Max heart rate sets your training zones; 220 minus your age is a rough starting point.")
                 }
 
                 Section {
@@ -69,7 +90,7 @@ struct SettingsView: View {
                 Section {
                     Toggle("Apple Health", isOn: $healthEnabled)
                 } footer: {
-                    Text("Saves each run as a workout with its route, and shows heart rate from a paired watch or chest strap.")
+                    Text("Saves each run as a workout with its route and heart rate. Without a Bluetooth sensor, heart rate is read from Health instead.")
                 }
 
                 Section("Appearance") {

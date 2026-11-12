@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 import CoreLocation
 import HealthKit
 import UIKit
@@ -30,6 +31,8 @@ struct FinishedRun {
     var points: [TrackPoint]
     var pauseIntervals: [DateInterval]
     var heartRates: [HeartRateSample]
+    /// True when heart rate came from a Bluetooth sensor rather than from Apple Health.
+    var heartRateFromSensor: Bool
 }
 
 /// Drives a live run: feeds GPS into the tracker, publishes metrics for the UI,
@@ -66,6 +69,10 @@ final class RunSession: ObservableObject {
     private var heartRateQuery: HKQuery?
     private var heartRates: [HeartRateSample] = []
     private var lastHeartRateDate: Date?
+    private var lastStoredHeartRate: Date?
+    private var sensorSubscription: AnyCancellable?
+    private var usedSensor = false
+    private let sensor = HeartRateMonitor.shared
     private var hasStarted = false
     private let cueEverySplits: Int
     private let weightKg: Double
@@ -115,6 +122,10 @@ final class RunSession: ObservableObject {
             self?.handle(locations)
         }
         location.startTracking()
+        sensor.activateIfPaired()
+        sensorSubscription = sensor.$heartRate.sink { [weak self] bpm in
+            self?.sensorHeartRate(bpm)
+        }
         if AppSettings.keepScreenOn {
             UIApplication.shared.isIdleTimerDisabled = true
         }
@@ -146,7 +157,9 @@ final class RunSession: ObservableObject {
         phase = .active
         if AppSettings.healthEnabled {
             heartRateQuery = HealthService.shared.startHeartRateUpdates(from: now) { [weak self] bpm, date in
-                self?.recordHeartRate(bpm, at: date)
+                // A directly connected sensor is fresher and more accurate than Health.
+                guard let self, !self.usedSensor else { return }
+                self.recordHeartRate(bpm, at: date)
             }
         }
         if let step = interval?.currentStep {
@@ -194,7 +207,8 @@ final class RunSession: ObservableObject {
                            elevationGain: tracker.elevationGain,
                            points: tracker.points,
                            pauseIntervals: tracker.pauseIntervals,
-                           heartRates: heartRates)
+                           heartRates: heartRates,
+                           heartRateFromSensor: usedSensor)
     }
 
     /// Abandons the session without recording anything.
@@ -209,6 +223,7 @@ final class RunSession: ObservableObject {
         timer = nil
         location.stopTracking()
         location.onLocations = nil
+        sensorSubscription = nil
         HealthService.shared.stop(heartRateQuery)
         heartRateQuery = nil
         UIApplication.shared.isIdleTimerDisabled = false
@@ -233,6 +248,10 @@ final class RunSession: ObservableObject {
                 phase = .countdown(remaining)
             }
         case .active:
+            // Drop a reading the sensor stopped refreshing (strap slipped, out of range).
+            if usedSensor, heartRate != nil, let last = sensor.lastReading, now.timeIntervalSince(last) > 6 {
+                heartRate = nil
+            }
             handle(tracker.tick(at: now))
             refresh(at: now)
         case .finished:
@@ -264,12 +283,32 @@ final class RunSession: ObservableObject {
         refresh(at: Date())
     }
 
+    private func sensorHeartRate(_ bpm: Double?) {
+        guard let bpm else {
+            if usedSensor { heartRate = nil }
+            return
+        }
+        // Show the reading during the countdown too, so the runner can see the sensor works.
+        heartRate = bpm
+        guard phase == .active else { return }
+        usedSensor = true
+        recordHeartRate(bpm, at: Date())
+    }
+
     private func recordHeartRate(_ bpm: Double, at date: Date) {
         guard phase == .active, let start = tracker.startDate, bpm > 0 else { return }
         if let last = lastHeartRateDate, date <= last { return }
         lastHeartRateDate = date
         heartRate = bpm
+        // Sensors report every second; one stored sample every few seconds is plenty.
+        if let stored = lastStoredHeartRate, date.timeIntervalSince(stored) < 4 { return }
+        lastStoredHeartRate = date
         heartRates.append(HeartRateSample(t: date.timeIntervalSince(start), bpm: bpm))
+    }
+
+    /// Heart rate zone 1...5 for the current reading.
+    var heartRateZone: Int? {
+        heartRate.map { HeartRateZones.zone(bpm: $0, maxHeartRate: AppSettings.maxHeartRate) }
     }
 
     // MARK: Output

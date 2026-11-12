@@ -18,6 +18,7 @@ enum SettingsKey {
     static let goalTimeSeconds = "goalTimeSeconds"
     static let goalPaceSecondsPerKm = "goalPaceSecondsPerKm"
     static let lastIntervalWorkout = "lastIntervalWorkout"
+    static let maxHeartRate = "maxHeartRate"
 }
 
 extension DistanceUnit {
@@ -47,7 +48,8 @@ enum AppSettings {
             SettingsKey.goalType: "distance",
             SettingsKey.goalDistanceMeters: 5000.0,
             SettingsKey.goalTimeSeconds: 1800.0,
-            SettingsKey.goalPaceSecondsPerKm: 360.0
+            SettingsKey.goalPaceSecondsPerKm: 360.0,
+            SettingsKey.maxHeartRate: 190.0
         ])
     }
 
@@ -60,5 +62,6 @@ enum AppSettings {
     static var autoPause: Bool { defaults.bool(forKey: SettingsKey.autoPause) }
     static var countdown: Bool { defaults.bool(forKey: SettingsKey.countdown) }
     static var keepScreenOn: Bool { defaults.bool(forKey: SettingsKey.keepScreenOn) }
+    static var maxHeartRate: Double { defaults.double(forKey: SettingsKey.maxHeartRate) }
     static var healthEnabled: Bool { defaults.bool(forKey: SettingsKey.healthEnabled) }
 }

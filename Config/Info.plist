@@ -6,9 +6,12 @@
 	<array>
 		<string>location</string>
 		<string>audio</string>
+		<string>bluetooth-central</string>
 	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Stride uses your location to measure the distance, pace and route of your runs.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Stride uses Bluetooth to read your heart rate from a chest strap or watch.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Stride reads your heart rate to show it during and after your runs.</string>
 	<key>NSHealthUpdateUsageDescription</key>

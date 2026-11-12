@@ -19,7 +19,8 @@ final class HealthService {
             HKObjectType.workoutType(),
             HKSeriesType.workoutRoute(),
             HKQuantityType(.distanceWalkingRunning),
-            HKQuantityType(.activeEnergyBurned)
+            HKQuantityType(.activeEnergyBurned),
+            HKQuantityType(.heartRate)
         ]
         let read: Set<HKObjectType> = [HKQuantityType(.heartRate)]
         do {
@@ -49,6 +50,17 @@ final class HealthService {
                 samples.append(HKQuantitySample(type: HKQuantityType(.activeEnergyBurned),
                                                 quantity: HKQuantity(unit: .kilocalorie(), doubleValue: calories),
                                                 start: finished.startDate, end: finished.endDate))
+            }
+            // Heart rate from a Bluetooth sensor isn't in Health yet, so add it to the workout.
+            let heartRateType = HKQuantityType(.heartRate)
+            if finished.heartRateFromSensor, store.authorizationStatus(for: heartRateType) == .sharingAuthorized {
+                let unit = HKUnit.count().unitDivided(by: .minute())
+                for reading in finished.heartRates {
+                    let date = finished.startDate.addingTimeInterval(reading.t)
+                    samples.append(HKQuantitySample(type: heartRateType,
+                                                    quantity: HKQuantity(unit: unit, doubleValue: reading.bpm),
+                                                    start: date, end: date))
+                }
             }
             try await builder.addSamples(samples)
 

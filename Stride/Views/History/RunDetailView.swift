@@ -12,6 +12,7 @@ struct RunDetailView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Shoe.addedDate) private var shoes: [Shoe]
     @AppStorage(SettingsKey.unit) private var unit: DistanceUnit = .localeDefault
+    @AppStorage(SettingsKey.maxHeartRate) private var maxHeartRate = 190.0
 
     @State private var points: [TrackPoint] = []
     @State private var splits: [Split] = []
@@ -42,7 +43,10 @@ struct RunDetailView: View {
                 if !splits.isEmpty { splitsCard }
                 if paceSamples.count > 2 { paceChart }
                 if elevationSamples.count > 2 { elevationChart }
-                if heartRates.count > 2 { heartRateChart }
+                if heartRates.count > 2 {
+                    heartRateChart
+                    zonesCard
+                }
                 if !run.bestEfforts.isEmpty { bestEffortsCard }
             }
             .padding(16)
@@ -308,6 +312,41 @@ struct RunDetailView: View {
                 .chartYScale(domain: .automatic(includesZero: false))
                 .chartXAxisLabel("min")
                 .frame(height: 150)
+            }
+        }
+    }
+
+    private var zonesCard: some View {
+        let times = HeartRateZones.timeInZones(samples: heartRates.map { (t: $0.t, bpm: $0.bpm) },
+                                               maxHeartRate: maxHeartRate)
+        let total = max(1, times.reduce(0, +))
+        let bounds = HeartRateZones.lowerBounds(maxHeartRate: maxHeartRate)
+        let colors: [Color] = [.gray, .blue, .green, .orange, .red]
+        return Card {
+            VStack(spacing: 10) {
+                SectionTitle("Heart Rate Zones")
+                ForEach((0..<5).reversed(), id: \.self) { index in
+                    HStack(spacing: 10) {
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Zone \(index + 1) · \(HeartRateZones.names[index])")
+                                .font(.subheadline.weight(.semibold))
+                            Text(index == 4 ? "\(bounds[index])+ bpm" : "\(bounds[index])–\(bounds[index + 1] - 1) bpm")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(width: 130, alignment: .leading)
+                        GeometryReader { proxy in
+                            Capsule()
+                                .fill(colors[index])
+                                .frame(width: max(4, proxy.size.width * times[index] / total))
+                        }
+                        .frame(height: 10)
+                        Text(Fmt.duration(times[index]))
+                            .font(.subheadline)
+                            .monospacedDigit()
+                            .frame(width: 52, alignment: .trailing)
+                    }
+                }
             }
         }
     }

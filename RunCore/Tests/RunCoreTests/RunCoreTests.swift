@@ -452,3 +452,47 @@ final class PlanTests: XCTestCase {
         XCTAssertEqual(try JSONDecoder().decode(TrainingPlan.self, from: data), plan)
     }
 }
+
+final class HeartRateTests: XCTestCase {
+    func testParseEightBitWithContactAndRR() {
+        // Flags 0x16: contact supported + detected, RR present. 148 bpm, RR 420/1024 s and 410/1024 s.
+        let reading = HeartRateReading.parse([0x16, 148, 0xA4, 0x01, 0x9A, 0x01])!
+        XCTAssertEqual(reading.bpm, 148)
+        XCTAssertEqual(reading.rrIntervals.count, 2)
+        XCTAssertEqual(reading.rrIntervals[0], 420.0 / 1024, accuracy: 1e-9)
+    }
+
+    func testParseSixteenBitWithEnergy() {
+        // Flags 0x09: 16-bit value + energy expended. 300 would be invalid; use 180.
+        let reading = HeartRateReading.parse([0x09, 180, 0x00, 0x10, 0x00])!
+        XCTAssertEqual(reading.bpm, 180)
+        XCTAssertTrue(reading.rrIntervals.isEmpty)
+    }
+
+    func testParseRejectsLostContactZeroAndShortPayloads() {
+        // Contact supported but not detected.
+        XCTAssertNil(HeartRateReading.parse([0x04, 90])!.bpm)
+        XCTAssertNil(HeartRateReading.parse([0x00, 0])!.bpm)
+        XCTAssertEqual(HeartRateReading.parse([0x00, 72])!.bpm, 72)
+        XCTAssertNil(HeartRateReading.parse([0x00]))
+        XCTAssertNil(HeartRateReading.parse([0x01, 60]))
+        XCTAssertNil(HeartRateReading.parse([]))
+    }
+
+    func testZones() {
+        XCTAssertEqual(HeartRateZones.zone(bpm: 100, maxHeartRate: 190), 1)
+        XCTAssertEqual(HeartRateZones.zone(bpm: 114, maxHeartRate: 190), 2)
+        XCTAssertEqual(HeartRateZones.zone(bpm: 140, maxHeartRate: 190), 3)
+        XCTAssertEqual(HeartRateZones.zone(bpm: 160, maxHeartRate: 190), 4)
+        XCTAssertEqual(HeartRateZones.zone(bpm: 175, maxHeartRate: 190), 5)
+        XCTAssertEqual(HeartRateZones.lowerBounds(maxHeartRate: 200), [100, 120, 140, 160, 180])
+    }
+
+    func testTimeInZonesSkipsGaps() {
+        let samples: [(t: Double, bpm: Double)] = [
+            (0, 100), (5, 120), (10, 150), (15, 150), (200, 180), (205, 180)
+        ]
+        let zones = HeartRateZones.timeInZones(samples: samples, maxHeartRate: 200)
+        XCTAssertEqual(zones, [5, 5, 5, 0, 5])
+    }
+}

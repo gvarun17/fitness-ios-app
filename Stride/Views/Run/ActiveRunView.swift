@@ -7,6 +7,7 @@ struct ActiveRunView: View {
     let setup: RunSetup
 
     @StateObject private var session: RunSession
+    @ObservedObject private var monitor = HeartRateMonitor.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     @State private var page = 0
@@ -80,8 +81,11 @@ struct ActiveRunView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             Spacer()
-            gpsStatus
-                .padding(.bottom, 30)
+            VStack(spacing: 10) {
+                gpsStatus
+                sensorStatus
+            }
+            .padding(.bottom, 30)
         }
         .foregroundStyle(.white)
         .contentShape(Rectangle())
@@ -101,6 +105,20 @@ struct ActiveRunView: View {
             Text(text)
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var sensorStatus: some View {
+        if monitor.hasPairedSensor {
+            HStack(spacing: 6) {
+                Image(systemName: "heart.fill")
+                    .font(.caption2)
+                    .foregroundStyle(session.heartRate == nil ? Color.yellow : Color.pink)
+                Text(session.heartRate.map { "\(Int($0.rounded())) bpm" } ?? "Looking for heart rate sensor…")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -232,7 +250,7 @@ struct ActiveRunView: View {
                 MetricView(value: Fmt.pace(secondsPerMeter: session.averagePace, unit: unit), label: "Avg pace")
                 MetricView(value: Fmt.elevation(session.elevationGain, unit: unit), label: "Climb")
                 if let bpm = session.heartRate {
-                    MetricView(value: "\(Int(bpm.rounded()))", label: "BPM")
+                    MetricView(value: "\(Int(bpm.rounded()))", label: session.heartRateZone.map { "BPM · Zone \($0)" } ?? "BPM")
                 } else {
                     MetricView(value: "\(Int(session.calories.rounded()))", label: "Kcal")
                 }
